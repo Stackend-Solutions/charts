@@ -25,7 +25,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: "{{ .Values.projectName }}-ci"
+      serviceAccountName: "{{ .Values.projectName }}-api-ci"
       {{ if eq .Values.environment "prod"}}
       priorityClassName: workload-critical
       {{ else if eq .Values.environment "test"}}
@@ -44,7 +44,7 @@ spec:
               value: "production"
           envFrom:
             - secretRef:
-                name: "{{ .Values.projectName }}-{{ .Values.environment }}"
+                name: "{{ .Values.namespace }}-{{ .Values.environment }}"
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
