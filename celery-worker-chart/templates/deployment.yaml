@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Values.projectName }}-celery-worker-{{ .Values.environment }}"
+  namespace: {{ .Values.projectName }}
+  labels:
+    {{- include "celery-worker-chart.labels" . | nindent 4 }}
+spec:
+{{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+{{- end }}
+  selector:
+    matchLabels:
+      {{- include "celery-worker-chart.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+    {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        {{- include "celery-worker-chart.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: "{{ .Values.projectName }}-celery-worker-ci"
+      {{ if eq .Values.environment "prod"}}
+      priorityClassName: workload-critical
+      {{ else if eq .Values.environment "test"}}
+      priorityClassName: test-critical
+      {{ else }}
+      priorityClassName: dev-critical
+      {{ end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: "{{ .Values.projectName }}-celery-worker-{{ .Values.environment }}"
+          env:
+            - name: DEPLOY_ENV
+              value: {{ .Values.environment }}
+            - name: ENV
+              value: "production"
+          envFrom:
+            - secretRef:
+                name: "{{ .Values.projectName }}-{{ .Values.environment }}"
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          command: [ 'celery', '-A', 'gmz', 'worker', '-l', 'info' ]
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          resources:
+            {{ if eq .Values.environment "prod" }}
+            requests:
+              cpu: 500m
+              memory: 500Mi
+            limits:
+              cpu: 750m
+              memory: 750Mi
+            {{ else }}
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            {{ end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

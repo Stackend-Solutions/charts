@@ -1,0 +1,45 @@
+{{- if .Values.autoscaling.enabled }}
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "django-api-chart.fullname" . }}
+  labels:
+    {{- include "django-api-chart.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "django-api-chart.fullname" . }}
+  {{ if eq .Values.environment "prod"}}
+  minReplicas: 2
+  maxReplicas: 10
+  {{ else if eq .Values.environment "test"}}
+  minReplicas: 1
+  maxReplicas: 2
+  {{ else }}
+  minReplicas: 1
+  maxReplicas: 3
+  {{ end }}
+  metrics:
+  {{- if .Values.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        {{ if eq .Values.environment "prod"}}
+        targetAverageUtilization: 60
+        {{ else }}
+        targetAverageUtilization: 80
+        {{ end }}
+  {{- end }}
+  {{- if .Values.autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        {{ if eq .Values.environment "prod"}}
+        targetAverageUtilization: 60
+        {{ else }}
+        targetAverageUtilization: 80
+        {{ end }}
+  {{- end }}
+{{- end }}
+

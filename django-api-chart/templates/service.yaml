@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ .Values.projectName }}-{{ .Values.environment }}-gql"
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "django-api-chart.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      {{ if eq .Values.environment "prod" }}
+      targetPort: 8000
+      {{ else if eq .Values.environment "test" }}
+      targetPort: 7000
+      {{ else }}
+      targetPort: 6000
+      {{ end }}
+  selector:
+    {{- include "django-api-chart.selectorLabels" . | nindent 4 }}

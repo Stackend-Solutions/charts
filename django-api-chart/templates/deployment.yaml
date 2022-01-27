@@ -1,0 +1,123 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Values.projectName }}-{{ .Values.environment }}"
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "django-api-chart.labels" . | nindent 4 }}
+spec:
+{{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+{{- end }}
+  selector:
+    matchLabels:
+      {{- include "django-api-chart.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+    {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        {{- include "django-api-chart.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: "{{ .Values.projectName }}-ci"
+      {{ if eq .Values.environment "prod"}}
+      priorityClassName: workload-critical
+      {{ else if eq .Values.environment "test"}}
+      priorityClassName: test-critical
+      {{ else }}
+      priorityClassName: dev-critical
+      {{ end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: "{{ .Values.projectName }}-{{ .Values.environment }}"
+          env:
+            - name: DEPLOY_ENV
+              value: {{ .Values.environment }}
+            - name: ENV
+              value: "production"
+          envFrom:
+            - secretRef:
+                name: "{{ .Values.projectName }}-{{ .Values.environment }}"
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          command:
+            - sh
+            - -c
+            - python manage.py collectstatic --no-input --settings=gmz.config.production &&
+              sleep 5 && echo "Begin Migration ..." &&
+              python manage.py migrate --settings=gmz.config.production &&
+              echo "Migration Completed"
+            {{ if eq .Values.environment "prod" }}
+            - gunicorn --bind 0.0.0.0:8000 gmz.wsgi:application --log-level info --timeout 180 --workers 3
+            {{ else if eq .Values.environment "test" }}
+            - gunicorn --bind 0.0.0.0:7000 gmz.wsgi:application --log-level info --timeout 180 --workers 3
+            {{ else }}
+            - gunicorn --bind 0.0.0.0:6000 gmz.wsgi:application --log-level info --timeout 180 --workers 3
+            {{ end }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            {{ if eq .Values.environment "prod" }}
+            - containerPort: 8000
+            {{ else if eq .Values.environment "test" }}
+            - containerPort: 7000
+            {{ else }}
+            - containerPort: 6000
+            {{ end }}
+          readinessProbe:
+            httpGet:
+              path: /readiness
+              {{ if eq .Values.environment "prod" }}
+              port: 8000
+              {{ else if eq .Values.environment "test" }}
+              port: 7000
+              {{ else }}
+              port: 6000
+              {{ end }}
+            initialDelaySeconds: 30
+          livenessProbe:
+            httpGet:
+              path: /readiness
+              {{ if eq .Values.environment "prod" }}
+              port: 8000
+              {{ else if eq .Values.environment "test" }}
+              port: 7000
+              {{ else }}
+              port: 6000
+              {{ end }}
+            initialDelaySeconds: 30
+          resources:
+            {{ if eq .Values.environment "prod" }}
+            requests:
+              cpu: 250m
+              memory: 500Mi
+            limits:
+              cpu: 500m
+              memory: 750Mi
+            {{ else }}
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 300m
+              memory: 512Mi
+            {{ end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
