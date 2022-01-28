@@ -61,7 +61,7 @@ spec:
               {{ else if eq .Values.environment "test" }}
               gunicorn --bind 0.0.0.0:7000 gmz.wsgi:application --log-level info --timeout 180 --workers 3
               {{ else }}
-              gunicorn --bind 0.0.0.0:6000 gmz.wsgi:application --log-level debug --timeout 180 --workers 3
+              gunicorn --bind 0.0.0.0:6000 gmz.wsgi:application --log-level debug --timeout 180 --workers 1
               {{ end }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
@@ -95,21 +95,12 @@ spec:
               {{ end }}
             initialDelaySeconds: 30
           resources:
-            {{ if eq .Values.environment "prod" }}
             requests:
               cpu: 250m
               memory: 500Mi
             limits:
               cpu: 500m
               memory: 750Mi
-            {{ else }}
-            requests:
-              cpu: 200m
-              memory: 256Mi
-            limits:
-              cpu: 300m
-              memory: 512Mi
-            {{ end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
