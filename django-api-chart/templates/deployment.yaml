@@ -57,11 +57,11 @@ spec:
               echo "Migration Completed" &&
               export $(cat ./.env | xargs) &&
               {{ if eq .Values.environment "prod" }}
-              gunicorn --bind 0.0.0.0:8000 gmz.wsgi:application --log-level info --timeout 180 --workers 3
+              gunicorn --bind 0.0.0.0:8000 gmz.wsgi:application --log-level info --timeout 180 --workers 1
               {{ else if eq .Values.environment "test" }}
-              gunicorn --bind 0.0.0.0:7000 gmz.wsgi:application --log-level info --timeout 180 --workers 3
+              gunicorn --bind 0.0.0.0:7000 gmz.wsgi:application --log-level info --timeout 180 --workers 1
               {{ else }}
-              gunicorn --bind 0.0.0.0:6000 gmz.wsgi:application --log-level debug --timeout 180 --workers 1
+              gunicorn --bind 0.0.0.0:6000 gmz.wsgi:application --log-level --timeout 180 --workers 1
               {{ end }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
