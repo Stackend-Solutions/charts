@@ -54,13 +54,13 @@ spec:
             -  python manage.py initenv && python manage.py collectstatic --no-input --settings=gmz.config.production &&
               sleep 5 && echo "Begin Migration ..." &&
               python manage.py migrate --settings=gmz.config.production &&
-              echo "Migration Completed"
+              echo "Migration Completed" &&
             {{ if eq .Values.environment "prod" }}
-            - gunicorn --bind 0.0.0.0:8000 gmz.wsgi:application --log-level info --timeout 180 --workers 3
+            gunicorn --bind 0.0.0.0:8000 gmz.wsgi:application --log-level info --timeout 180 --workers 3
             {{ else if eq .Values.environment "test" }}
-            - gunicorn --bind 0.0.0.0:7000 gmz.wsgi:application --log-level info --timeout 180 --workers 3
+            gunicorn --bind 0.0.0.0:7000 gmz.wsgi:application --log-level info --timeout 180 --workers 3
             {{ else }}
-            - gunicorn --bind 0.0.0.0:6000 gmz.wsgi:application --log-level info --timeout 180 --workers 3
+            gunicorn --bind 0.0.0.0:6000 gmz.wsgi:application --log-level info --timeout 180 --workers 3
             {{ end }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
