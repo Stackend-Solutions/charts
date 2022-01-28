@@ -51,8 +51,7 @@ spec:
           command:
             - sh
             - -c
-            - python manage.py initenv
-            - python manage.py collectstatic --no-input --settings=gmz.config.production &&
+            -  python manage.py initenv && python manage.py collectstatic --no-input --settings=gmz.config.production &&
               sleep 5 && echo "Begin Migration ..." &&
               python manage.py migrate --settings=gmz.config.production &&
               echo "Migration Completed"
