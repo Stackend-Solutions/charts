@@ -25,7 +25,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: "{{ .Values.projectName }}-api-ci"
+      serviceAccountName: {{ include "django-api-chart.serviceAccountName" . }}
       {{ if eq .Values.environment "prod"}}
       priorityClassName: workload-critical
       {{ else if eq .Values.environment "test"}}
@@ -51,6 +51,7 @@ spec:
           command:
             - sh
             - -c
+            - python manage.py initenv
             - python manage.py collectstatic --no-input --settings=gmz.config.production &&
               sleep 5 && echo "Begin Migration ..." &&
               python manage.py migrate --settings=gmz.config.production &&
