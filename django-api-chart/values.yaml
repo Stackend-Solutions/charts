@@ -73,3 +73,54 @@ affinity: {}
 projectName: foo
 environment: bar
 namespace: foo
+
+
+celeryBeat:
+  enabled: false
+
+  command: ["celery", "beat", "-A", "config.celery_app", "-l", "info"]
+
+  podSecurityContext: {}
+
+  securityContext: {}
+
+  resources: {}
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+celeryWorker:
+  enabled: false
+  command: ["celery", "worker", "-A", "config.celery_app", "-l", "info", "-Q", "celery"]
+
+celerFlower:
+  enabled: false
+
+  command: ["celery", "flower", "-A", "config.celery_app", "--address=0.0.0.0", "--port=5555"]
+
+  service:
+    type: ClusterIP
+    port: 5555
+
+  ingress:
+    enabled: false
+    annotations: {}
+    hosts:
+      - host: chart-example.local
+        paths: []
+    tls: []
+
+  podSecurityContext: {}
+
+  securityContext: {}
+
+  resources: {}
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
