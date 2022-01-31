@@ -42,7 +42,7 @@ spec:
               value: "production"
           envFrom:
             - secretRef:
-                name: "{{ .Values.projectName }}-{{ .Values.environment }}"
+                name: "{{ .Values.namespace }}-{{ .Values.environment }}"
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
