@@ -5,12 +5,12 @@ metadata:
   name: "{{ .Values.projectName }}-celery-beat-{{ .Values.environment }}"
   namespace: {{ .Values.namespace }}
   labels:
-    {{- include "django-api-chart.labels" . | nindent 4 }}
+    {{- include "django-api-chart.celery_beat_labels" . | nindent 4 }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      {{- include "django-api-chart.selectorLabels" . | nindent 6 }}
+      {{- include "django-api-chart.celeryBeatSelectorLabels" . | nindent 6 }}
   template:
     metadata:
     {{- with .Values.podAnnotations }}
@@ -18,7 +18,7 @@ spec:
         {{- toYaml . | nindent 8 }}
     {{- end }}
       labels:
-        {{- include "django-api-chart.selectorLabels" . | nindent 8 }}
+        {{- include "django-api-chart.celeryBeatSelectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
