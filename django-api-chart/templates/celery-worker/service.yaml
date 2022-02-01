@@ -10,11 +10,11 @@ spec:
   ports:
     - port: {{ .Values.service.port }}
       {{ if eq .Values.environment "prod" }}
-      targetPort: 8000
+      targetPort: 8001
       {{ else if eq .Values.environment "test" }}
-      targetPort: 7000
+      targetPort: 7001
       {{ else }}
-      targetPort: 6000
+      targetPort: 6001
       {{ end }}
   selector:
     {{- include "django-api-chart.celeryWorkerSelectorLabels" . | nindent 4 }}

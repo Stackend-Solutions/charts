@@ -51,6 +51,14 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            {{ if eq .Values.environment "prod" }}
+            - containerPort: 8002
+            {{ else if eq .Values.environment "test" }}
+            - containerPort: 7002
+            {{ else }}
+            - containerPort: 6002
+            {{ end }}
           resources:
             requests:
               cpu: 50m
