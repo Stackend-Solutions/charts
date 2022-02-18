@@ -24,6 +24,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      serviceAccountName: {{ include "django-api-chart.serviceAccountName" . }}
       {{ if eq .Values.environment "prod"}}
       priorityClassName: workload-critical
       {{ else if eq .Values.environment "test"}}
