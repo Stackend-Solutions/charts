@@ -3,7 +3,7 @@
 # takes 1 args
 # 1 - directory/filename.tgz - created by `helm package .` command in directory
 
-cd "$(dirname "$0")/.." || exit
+#cd "$(dirname "$0")/.." || exit
 
 if [ -f .env ]
 then
