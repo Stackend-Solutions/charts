@@ -55,7 +55,7 @@ spec:
               sleep 5 && echo "Begin Migration ..." &&
               python manage.py migrate --settings=gmz.config.production &&
               echo "Migration Completed" &&
-              export $(cat ./.env | xargs) &&
+              . ./export_env.sh &&
               {{ if eq .Values.environment "prod" }}
               gunicorn --bind 0.0.0.0:8000 gmz.wsgi:application --log-level info --timeout 180 --workers 1 --threads 4
               {{ else if eq .Values.environment "test" }}
