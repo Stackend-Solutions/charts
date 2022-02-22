@@ -124,3 +124,9 @@ celerFlower:
   tolerations: []
 
   affinity: {}
+
+collectstaticJob:
+  enabled: true
+
+migrateJob:
+  enabled: true
