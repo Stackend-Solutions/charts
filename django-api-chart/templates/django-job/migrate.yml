@@ -1,5 +1,3 @@
-
-{{- if .Values.migrateJob.enabled -}}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -11,14 +9,16 @@ spec:
   template:
     #    ttlSecondsAfterFinished: 60
     spec:
-      {{- with .Values.image.imagePullSecrets }}
+      {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      serviceAccountName: {{ include "django-api-chart.serviceAccountName" . }}
+
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-        - name: {{ .Chart.Name }}
+        - name: "{{ .Values.projectName }}-{{ .Values.environment }}-migrate"
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -37,6 +37,7 @@ spec:
           envFrom:
             - secretRef:
                 name: "{{ .Values.namespace }}-{{ .Values.environment }}"
+            - secretRef:
+                name: "{{ .Values.namespace }}-{{ .Values.environment }}-migrations"
       restartPolicy: Never
   backoffLimit: 0
-  {{- end -}}
