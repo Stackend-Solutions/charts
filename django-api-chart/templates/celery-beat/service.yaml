@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ .Values.projectName }}-{{ .Values.environment }}-celery-beat"
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "django-api-chart.celeryBeatSelectorLabels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      {{ if eq .Values.environment "prod" }}
+      targetPort: 8002
+      {{ else if eq .Values.environment "test" }}
+      targetPort: 7002
+      {{ else }}
+      targetPort: 6002
+      {{ end }}
+  selector:
+    {{- include "django-api-chart.celeryBeatSelectorLabels" . | nindent 4 }}

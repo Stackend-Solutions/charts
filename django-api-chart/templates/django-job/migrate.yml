@@ -1,0 +1,42 @@
+
+{{- if .Values.migrateJob.enabled -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ .Values.projectName }}-{{ .Values.environment }}-migrate"
+  labels:
+    {{- include "django-api-chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: migrate-job
+spec:
+  template:
+    #    ttlSecondsAfterFinished: 60
+    spec:
+      {{- with .Values.image.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - sh
+            - -c
+            - python manage.py initenv && . ./export_env.sh &&
+              sleep 5 && echo "Begin Migration ..." &&
+              python manage.py migrate --settings=gmz.config.production && rm .env
+          env:
+            - name: DEPLOY_ENV
+              value: {{ .Values.environment }}
+            - name: ENV
+              value: "production"
+          envFrom:
+            - secretRef:
+                name: "{{ .Values.namespace }}-{{ .Values.environment }}"
+      restartPolicy: Never
+  backoffLimit: 0
+  {{- end -}}
