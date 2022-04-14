@@ -1,0 +1,83 @@
+{{- if .Values.celeryWorker.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Values.projectName }}-celery-worker-{{ .Values.environment }}"
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "django-api-chart.celeryWorkerLabels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "django-api-chart.celeryWorkerSelectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+    {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        {{- include "django-api-chart.celeryWorkerSelectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "django-api-chart.serviceAccountName" . }}
+
+      {{ if eq .Values.environment "prod"}}
+      priorityClassName: workload-critical
+      {{ else if eq .Values.environment "test"}}
+      priorityClassName: test-critical
+      {{ else }}
+      priorityClassName: dev-critical
+      {{ end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: "{{ .Values.projectName }}-celery-worker-{{ .Values.environment }}"
+          env:
+            - name: DEPLOY_ENV
+              value: {{ .Values.environment }}
+            - name: ENV
+              value: "production"
+          envFrom:
+            - secretRef:
+                name: "{{ .Values.namespace }}-{{ .Values.environment }}"
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          {{- with .Values.celeryWorker.command }}
+          command:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            {{ if eq .Values.environment "prod" }}
+            - containerPort: 8001
+            {{ else if eq .Values.environment "test" }}
+            - containerPort: 7001
+            {{ else }}
+            - containerPort: 6001
+            {{ end }}
+          resources:
+            requests:
+              cpu: 500m
+              memory: 500Mi
+            limits:
+              cpu: 750m
+              memory: 750Mi
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  {{- end}}

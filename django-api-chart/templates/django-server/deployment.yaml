@@ -51,17 +51,16 @@ spec:
           command:
             - sh
             - -c
-            -  python manage.py initenv && python manage.py collectstatic --no-input --settings=gmz.config.production &&
+            -  python manage.py initenv && . ./export_env.sh &&  python manage.py collectstatic --no-input --settings=gmz.config.production &&
               sleep 5 && echo "Begin Migration ..." &&
               python manage.py migrate --settings=gmz.config.production &&
               echo "Migration Completed" &&
-              export $(cat ./.env | xargs) &&
               {{ if eq .Values.environment "prod" }}
-              gunicorn --bind 0.0.0.0:8000 gmz.wsgi:application --log-level info --timeout 180 --workers 1
+              gunicorn --bind 0.0.0.0:8000 gmz.wsgi:application --log-level info --timeout 180 --workers 1 --threads 4
               {{ else if eq .Values.environment "test" }}
               gunicorn --bind 0.0.0.0:7000 gmz.wsgi:application --log-level info --timeout 180 --workers 1
               {{ else }}
-              gunicorn --bind 0.0.0.0:6000 gmz.wsgi:application --log-level --timeout 180 --workers 1
+              gunicorn --bind 0.0.0.0:6000 gmz.wsgi:application --log-level info --timeout 180 --workers 1 --threads 2
               {{ end }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
@@ -95,12 +94,21 @@ spec:
               {{ end }}
             initialDelaySeconds: 30
           resources:
+            {{ if eq .Values.environment "prod" }}
+            requests:
+              cpu: 300m
+              memory: 500Mi
+            limits:
+              cpu: 1000m
+              memory: 1200Mi
+            {{ else }}
             requests:
               cpu: 250m
               memory: 500Mi
             limits:
               cpu: 500m
               memory: 750Mi
+            {{ end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

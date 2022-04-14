@@ -33,9 +33,28 @@ Create chart name and version as used by the chart label.
 {{/*
 Common labels
 */}}
+
 {{- define "django-api-chart.labels" -}}
 helm.sh/chart: {{ include "django-api-chart.chart" . }}
 {{ include "django-api-chart.selectorLabels" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}
+
+{{- define "django-api-chart.celeryWorkerLabels" -}}
+helm.sh/chart: {{ include "django-api-chart.chart" . }}
+{{ include "django-api-chart.celeryWorkerSelectorLabels" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}
+
+{{- define "django-api-chart.celery_beat_labels" -}}
+helm.sh/chart: {{ include "django-api-chart.chart" . }}
+{{ include "django-api-chart.celeryBeatSelectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -48,6 +67,16 @@ Selector labels
 {{- define "django-api-chart.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "django-api-chart.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{- define "django-api-chart.celeryWorkerSelectorLabels" -}}
+app.kubernetes.io/name: {{ include "django-api-chart.name" . }}
+app.kubernetes.io/instance: {{ .Values.projectName }}-celery-worker-{{ .Values.environment }}
+{{- end }}
+
+{{- define "django-api-chart.celeryBeatSelectorLabels" -}}
+app.kubernetes.io/name: {{ include "django-api-chart.name" . }}
+app.kubernetes.io/instance: {{ .Values.projectName }}-celery-beat-{{ .Values.environment }}
 {{- end }}
 
 {{/*
