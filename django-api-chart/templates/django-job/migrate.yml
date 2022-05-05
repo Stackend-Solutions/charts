@@ -28,7 +28,7 @@ spec:
             - -c
             - python manage.py initenv && . ./export_env.sh &&
               sleep 5 && echo "Begin Migration ..." &&
-              python manage.py migrate --settings=gmz.config.production && rm .env
+              python manage.py migrate --settings={{ .Values.appName }}.config.production && rm .env
           env:
             - name: DEPLOY_ENV
               value: {{ .Values.environment }}

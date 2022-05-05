@@ -74,6 +74,9 @@ projectName: foo
 environment: bar
 namespace: foo
 
+# this name should match the folder name the config folder lives in. ex: with vennity -> vennity.config.production
+appName: foobar
+
 
 celeryBeat:
   enabled: false
