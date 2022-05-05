@@ -51,7 +51,7 @@ spec:
           command:
             - sh
             - -c
-            -  python manage.py initenv && . ./export_env.sh &&  python manage.py collectstatic --no-input --settings={{ .Values.appName }}.config.production &&
+            -  python initenv.py && . ./export_env.sh &&  python manage.py collectstatic --no-input --settings={{ .Values.appName }}.config.production &&
               sleep 5 &&
               {{ if eq .Values.environment "prod" }}
               gunicorn --bind 0.0.0.0:8000 {{ .Values.appName }}.wsgi:application --log-level info --timeout 180 --workers 1 --threads 4

@@ -26,7 +26,7 @@ spec:
           command:
             - sh
             - -c
-            - python manage.py initenv && . ./export_env.sh &&
+            - python initenv.py && . ./export_env.sh &&
               sleep 5 && echo "Begin Migration ..." &&
               python manage.py migrate --settings={{ .Values.appName }}.config.production && rm .env
           env:
